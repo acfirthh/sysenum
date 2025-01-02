@@ -25,6 +25,22 @@ check_output() {
     fi
 }
 
+# Gets the default shell of the current user from /etc/passwd
+get_default_shell() {
+    local username=$(whoami)
+    local default_shell
+
+    if command -v getent &>/dev/null; then
+        # Use getent if available
+        default_shell=$(getent passwd "$username" | cut -d: -f7 | xargs basename)
+    else
+        # Fallback to grep if getent is not available
+        default_shell=$(grep "^${username}:" /etc/passwd | awk -F: '{print $7}' | xargs basename)
+    fi
+
+    echo $default_shell
+}
+
 # Displays the tool banner
 banner() {
     # Display SYSENUM Banner
@@ -193,9 +209,9 @@ general() {
     echo -e "\n${BGreen}Environment Variables:${COLOUR_OFF}"
     env | sed 's/\x1b\[[0-9;]*m//g' 2>/dev/null
     
-    # All system users with bash/zsh shell
-    echo -e "\n${BGreen}All Users with bash|zsh Shell:${COLOUR_OFF}"
-    grep -E "/bin/(bash|zsh)" /etc/passwd | awk -F ":" '{print $1}' | sed "s/\broot\b/$(echo -e "${BRed}&${COLOUR_OFF}")/g" 2>/dev/null
+    # All system users with login capability
+    echo -e "\n${BGreen}All Users with Login Capability:${COLOUR_OFF}"
+    grep -vE "(/usr/sbin/nologin|/bin/false)" /etc/passwd | awk -F ":" '{print $1}' | sed "s/\broot\b/$(echo -e "${BRed}&${COLOUR_OFF}")/g" 2>/dev/null
 }
 
 # Lists the bash, kernel, and sudo version
@@ -273,24 +289,25 @@ find_interesting() {
 # Detects which history file to read and uses grep to locate possible passwords
 scan_history() {
     echo -e "\n${BGreen}Find Commands in Bash|ZSH History Containing Potential Passwords or Usernames:${COLOUR_OFF}"
-    # Detect which shell type is being used to fetch history
-    CURRENT_SHELL=$(basename "$SHELL")
+
+    # Use get_default_shell to determine the user's default shell
+    local CURRENT_SHELL=$(get_default_shell)
 
     if [[ "$CURRENT_SHELL" == "bash" ]]; then
         HIST_FILE=~/.bash_history
     elif [[ "$CURRENT_SHELL" == "zsh" ]]; then
         HIST_FILE=~/.zsh_history
     else
-        echo -e "${BRed}[!] Could Not Locate History File...${COLOUR_OFF}"
+        echo -e "${BRed}[!] Could Not Locate History File for Shell Type '${CURRENT_SHELL}'...${COLOUR_OFF}"
         return 1
     fi
 
-    # Check history file exists
+    # Check if the history file exists
     if [[ -f "$HIST_FILE" ]]; then
         echo -e "${BBlue}[+] History File Location:${COLOUR_OFF} ${BWhite}'$HIST_FILE'${COLOUR_OFF}"
-        # Load history file
+        # Load the history file
         history -r "$HIST_FILE" 2>/dev/null
-        # Grep search history file
+        # Grep to search the history file for potential credentials
         history | grep -iE --color=always '\-p|\-pass|\-password|passw|[^[:space:]]+:[^[:space:]]+|[^[:space:]]+@[^[:space:]]+' 2>/dev/null | check_output
     else
         echo -e "${BRed}[!] History File Does Not Exist...${COLOUR_OFF}"
