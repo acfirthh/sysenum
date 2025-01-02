@@ -18,7 +18,7 @@ The information from the system can be used either to simply found out more abou
 The script has a few different functions that perform numerous checks to gather information about the system.
 
 ### General (-g)
-The *general* function gathers basic information about the machine, including checking if the machine is a **Docker** or **LXC** container, fetching the **hostname**, **current user**, **shell type**, **environment variables**, and all of the users with a **bash** or **zsh** shell on the machine.
+The *general* function gathers basic information about the machine, including checking if the machine is a **Docker** or **LXC** container, fetching the **hostname**, **current user**, **shell type**, **environment variables**, and all of the users with **login capability** on the machine.
 
 ![Docker and LXC Check](images/docker_lxc_check.png)
 
