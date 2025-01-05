@@ -49,11 +49,16 @@ The *suid check* function locates all of the **SUID** binaries on the machine an
 
 ![Exploitable SUID Check](images/suid_check.png)
 
+### Exploitable Binary with Capabilities Check (-c)
+The *file capabilities check* function scans the system for file and binaries with capabilities set. It then compares each binary against a list of known exploitable binaries *(Taken from [GTFOBins](https://gtfobins.github.io/))*. If a binary is found, it will be highlighted and provide a link to **GTFOBins** referencing that binary.
+
+![Exploitable Binary with Capabilities Check](images/file_capability_check.png)
+
 ## Usage
 You can run the script without any arguments to run all of the functions automatically and enumerate all information, or you can pass the below arguments to the script to only run specific functions.
 
 **Usage:**\
-`./sysenum.sh [-h] [-g] [-n] [-f] [-r] [-m] [-S] [-p] [-s]`
+`./sysenum.sh [-h] [-g] [-n] [-f] [-r] [-m] [-S] [-p] [-s] [-c]`
 
 | Optional Argument | What It Does                                                                          |
 | ----------------- | ------------------------------------------------------------------------------------- |
@@ -66,6 +71,7 @@ You can run the script without any arguments to run all of the functions automat
 | \-S               | Scan the bash\|zsh history file for potential passwords.                              |
 | \-p               | Display processes being run by root.                                                  |
 | \-s               | Find SUID binaries and check against a list of known exploitable binaries.            |
+| \-c               | Find binaries with capabilities and check against a list of exploitable binaries.     |
 
 You can also call multiple different functions in any order. For example, calling the **filesystem** and **network** functions:\
 `./sysenum.sh -m -n`
