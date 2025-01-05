@@ -454,7 +454,7 @@ handle_args() {
 
 # Show usage info
 usage() {
-    echo -e "\n${BWhite}Usage: $0 [-h] [-g] [-n] [-f] [-r] [-m] [-S] [-p] [-s]${COLOUR_OFF}"
+    echo -e "\n${BWhite}Usage: $0 [-h] [-g] [-n] [-f] [-r] [-m] [-S] [-p] [-s] [-c]${COLOUR_OFF}"
     echo "Run the script with no arguments to enumerate all system information."
     echo -e "\n${BWhite}Optional Arguments:${COLOUR_OFF}"
     echo "  -h    Displays this usage section."
