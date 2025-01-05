@@ -342,6 +342,49 @@ suid_check() {
     done <<< "$output"
 }
 
+file_capability_check() {
+    # List of binaries that, with capabilities, can be abused (taken from GTFOBins)
+    cap_binaries="gdb|node|perl|php|python|ruby|rview|rvim|view|vim|vimdiff"
+
+    # Find Binaries with Capabilities
+    echo -e "\n${BGreen}Locate Binaries with Capabilities:${COLOUR_OFF}"
+
+    # Check if getcap is installed
+    if ! command -v getcap &>/dev/null; then
+        echo -e "${BRed}[!] ${BWhite}'getcap' command not found. Cannot enumerate binaries with capabilities...${COLOUR_OFF}"
+        exit 1
+    fi
+
+    # Find all binaries with capabilities
+    cap_bins=$(getcap -r / 2>/dev/null)
+
+    # Check if there were any binaries found
+    if [ -z "$cap_bins" ]; then
+        echo -e "${BRed}[!] ${BWhite}No binaries with capabilities found...${COLOUR_OFF}"
+    else
+        # Iterate through located binaries
+        while IFS= read -r line; do
+            # Split the line into the file path and the capabilities
+            file_path=$(echo "$line" | awk '{print $1}')
+            # Extract capabilities, removing the equals sign if present
+            file_capabilities=$(echo "$line" | awk '{print substr($0, index($0, $2))}' | sed 's/^= //')
+
+            # Get the binary name
+            binary=$(basename "$file_path")
+
+            # Check if the binary name matches any of the binaries from GTFOBins
+            if [[ "$binary" =~ ^($cap_binaries)([0-9.]+)?$ ]]; then
+                # Extract the matched binary name from the list
+                matched_binary="${BASH_REMATCH[1]}"
+                
+                echo -e "\n${BWhite}Binary: ${BRed}$binary ${BWhite}- Can Be Abused! Check 'https://gtfobins.github.io/gtfobins/$matched_binary/'!${COLOUR_OFF}\n${BWhite}Full Path: ${BRed}$file_path\n${BWhite}Capabilities: ${BRed}$file_capabilities ${COLOUR_OFF}\n"
+            else
+                echo -e "$file_path - $file_capabilities"
+            fi
+        done <<< "$cap_bins"
+    fi
+}
+
 # Default function calls
 call_default_functions() {
     banner
@@ -354,12 +397,13 @@ call_default_functions() {
     scan_history
     root_processes
     suid_check
+    file_capability_check
 }
 
 # Function to handle the arguments and call appropriate functions
 handle_args() {
     # Check the passed arguments
-    while getopts ":hgnfrmSps" opt; do
+    while getopts ":hgnfrmSpsc" opt; do
         case $opt in
             h)  # Option -h
                 usage
@@ -381,16 +425,19 @@ handle_args() {
             m)  # Option -m
                 filesystem
                 ;;
-            S)  # Option -h for scan_history
+            S)  # Option -h
                 scan_history
                 ;;
-            p)  # Option -r for root_processes
+            p)  # Option -r
                 root_processes
                 ;;
-            s)  # Option -s for suid_check
+            s)  # Option -s
                 suid_check
                 ;;
-            \?)  # Invalid option
+            c)  # Option -c
+                file_capability_check
+                ;;
+            \?) # Invalid option
                 echo -e "\n${BRed}[!] Invalid option: -$OPTARG${COLOUR_OFF}" >&2
                 usage
                 exit 1
@@ -419,6 +466,7 @@ usage() {
     echo "  -S    Scan the bash|zsh history file for potential passwords."
     echo "  -p    Display processes being run by root."
     echo "  -s    Find SUID binaries and check against a list of known exploitable binaries."
+    echo "  -c    Find binaries with capabilites and check against a list of known exploitable bianries."
 }
 
 # Function to validate the arguments
