@@ -17,7 +17,7 @@ COLOUR_OFF='\033[0m'
 
 # Checks if any output is given from find commands
 check_output() {
-    output=$(cat)
+    local output=$(cat)
     if [ -z "$output" ]; then
         echo -e "${BRed}[!] Nothing Found...${COLOUR_OFF}"
     else
@@ -292,6 +292,7 @@ scan_history() {
 
     # Use get_default_shell to determine the user's default shell
     local CURRENT_SHELL=$(get_default_shell)
+    local HIST_FILE
 
     if [[ "$CURRENT_SHELL" == "bash" ]]; then
         HIST_FILE=~/.bash_history
@@ -319,21 +320,21 @@ root_processes() {
     # Processes Run as root
     echo -e "\n${BGreen}Find Processes Being Run as root:${COLOUR_OFF}"
     ps aux | grep root 2>/dev/null
-    echo -e "\n${BBlue}(Cronjobs can be hidden, use 'pspy' to monitor for hidden processes)${COLOUR_OFF}"
+    echo -e "\n${BBlue}(Processes can be hidden, use 'pspy' to monitor for hidden processes)${COLOUR_OFF}"
 }
 
 # Locates SUID binaries and checks against list of exploitable binaries from GTFOBins
 suid_check() {
     # List of SUID and Limited SUID binaries taken from hxxps://gtfobins[.]github[.]io/
-    suid_binaries="aa-exec,ab,agetty,alpine,ar,aria2c,arj,arp,as,ascii-xfr,ash,aspell,atobm,awk,awk,base32,base64,basenc,basez,bash,batcat,bc,bridge,busctl,busybox,byebug,bzip2,cabal,capsh,cat,chmod,choom,chown,chroot,clamscan,cmp,column,comm,composer,cp,cpio,cpulimit,csh,csplit,csvtool,cupsfilter,curl,cut,dash,date,dc,dd,debugfs,dialog,diff,dig,distcc,dmsetup,docker,dosbox,dvips,ed,ed,efax,elvish,emacs,env,eqn,espeak,expand,expect,file,find,fish,flock,fmt,fold,gawk,gawk,gcore,gdb,genie,genisoimage,gimp,ginsh,git,grep,gtester,gzip,hd,head,hexdump,highlight,hping3,iconv,iftop,install,ionice,ip,ispell,jjs,joe,join,jq,jrunscript,julia,ksh,ksshell,kubectl,latex,ld.so,ldconfig,less,lftp,links,logsave,look,lua,lua,lualatex,luatex,make,mawk,mawk,minicom,more,mosquitto,msgattrib,msgcat,msgconv,msgfilter,msgmerge,msguniq,multitime,mv,mysql,nano,nasm,nawk,nawk,nc,ncdu,ncftp,nft,nice,nl,nm,nmap,nmap,node,nohup,ntpdate,octave,od,openssl,openvpn,pandoc,pandoc,paste,pdflatex,pdftex,perf,perl,pexec,pg,php,pic,pico,pidstat,posh,pr,pry,psftp,ptx,python,rake,rc,readelf,restic,rev,rlwrap,rpm,rpmdb,rpmquery,rpmverify,rsync,rtorrent,run-parts,runscript,rview,rview,rvim,rvim,sash,scanmem,scp,scrot,sed,setarch,setfacl,setlock,shuf,slsh,socat,soelim,softlimit,sort,sqlite3,sqlite3,ss,ssh-agent,ssh-keygen,ssh-keyscan,sshpass,start-stop-daemon,stdbuf,strace,strings,sysctl,systemctl,tac,tail,tar,taskset,tasksh,tbl,tclsh,tdbtool,tee,telnet,terraform,tex,tftp,tic,time,timeout,tmate,troff,ul,unexpand,uniq,unshare,unsquashfs,unzip,update-alternatives,uudecode,uuencode,vagrant,varnishncsa,view,view,vigr,vim,vim,vimdiff,vimdiff,vipw,w3m,watch,watch,wc,wget,whiptail,xargs,xdotool,xelatex,xetex,xmodmap,xmore,xxd,xz,yash,zip,zsh,zsoelim"
+    local suid_binaries="aa-exec,ab,agetty,alpine,ar,aria2c,arj,arp,as,ascii-xfr,ash,aspell,atobm,awk,awk,base32,base64,basenc,basez,bash,batcat,bc,bridge,busctl,busybox,byebug,bzip2,cabal,capsh,cat,chmod,choom,chown,chroot,clamscan,cmp,column,comm,composer,cp,cpio,cpulimit,csh,csplit,csvtool,cupsfilter,curl,cut,dash,date,dc,dd,debugfs,dialog,diff,dig,distcc,dmsetup,docker,dosbox,dvips,ed,ed,efax,elvish,emacs,env,eqn,espeak,expand,expect,file,find,fish,flock,fmt,fold,gawk,gawk,gcore,gdb,genie,genisoimage,gimp,ginsh,git,grep,gtester,gzip,hd,head,hexdump,highlight,hping3,iconv,iftop,install,ionice,ip,ispell,jjs,joe,join,jq,jrunscript,julia,ksh,ksshell,kubectl,latex,ld.so,ldconfig,less,lftp,links,logsave,look,lua,lua,lualatex,luatex,make,mawk,mawk,minicom,more,mosquitto,msgattrib,msgcat,msgconv,msgfilter,msgmerge,msguniq,multitime,mv,mysql,nano,nasm,nawk,nawk,nc,ncdu,ncftp,nft,nice,nl,nm,nmap,nmap,node,nohup,ntpdate,octave,od,openssl,openvpn,pandoc,pandoc,paste,pdflatex,pdftex,perf,perl,pexec,pg,php,pic,pico,pidstat,posh,pr,pry,psftp,ptx,python,rake,rc,readelf,restic,rev,rlwrap,rpm,rpmdb,rpmquery,rpmverify,rsync,rtorrent,run-parts,runscript,rview,rview,rvim,rvim,sash,scanmem,scp,scrot,sed,setarch,setfacl,setlock,shuf,slsh,socat,soelim,softlimit,sort,sqlite3,sqlite3,ss,ssh-agent,ssh-keygen,ssh-keyscan,sshpass,start-stop-daemon,stdbuf,strace,strings,sysctl,systemctl,tac,tail,tar,taskset,tasksh,tbl,tclsh,tdbtool,tee,telnet,terraform,tex,tftp,tic,time,timeout,tmate,troff,ul,unexpand,uniq,unshare,unsquashfs,unzip,update-alternatives,uudecode,uuencode,vagrant,varnishncsa,view,view,vigr,vim,vim,vimdiff,vimdiff,vipw,w3m,watch,watch,wc,wget,whiptail,xargs,xdotool,xelatex,xetex,xmodmap,xmore,xxd,xz,yash,zip,zsh,zsoelim"
     
     # Find SUID Binaries
     echo -e "\n${BGreen}Locate SUID Binaries:${COLOUR_OFF}"
-    output=$(find / -type f -perm -4000 2>/dev/null)
+    local output=$(find / -type f -perm -4000 2>/dev/null)
     
     # Check each SUID binary against GTFOBins
     while read -r fullpath; do
-        binary=$(basename "$fullpath")
+        local binary=$(basename "$fullpath")
         if echo "$suid_binaries" | grep -wq "\b$binary\b"; then
             echo -e "\n${BWhite}Binary: ${BRed}$binary ${BWhite}- Can Be Abused! Check 'https://gtfobins.github.io/gtfobins/$binary/'!${COLOUR_OFF}\n${BWhite}Full Path: ${BRed}$fullpath${COLOUR_OFF}\n"
         else
@@ -344,7 +345,7 @@ suid_check() {
 
 file_capability_check() {
     # List of binaries that, with capabilities, can be abused (taken from GTFOBins)
-    cap_binaries="gdb|node|perl|php|python|ruby|rview|rvim|view|vim|vimdiff"
+    local cap_binaries="gdb|node|perl|php|python|ruby|rview|rvim|view|vim|vimdiff"
 
     # Find Binaries with Capabilities
     echo -e "\n${BGreen}Locate Binaries with Capabilities:${COLOUR_OFF}"
@@ -356,7 +357,7 @@ file_capability_check() {
     fi
 
     # Find all binaries with capabilities
-    cap_bins=$(getcap -r / 2>/dev/null)
+    local cap_bins=$(getcap -r / 2>/dev/null)
 
     # Check if there were any binaries found
     if [ -z "$cap_bins" ]; then
@@ -365,17 +366,17 @@ file_capability_check() {
         # Iterate through located binaries
         while IFS= read -r line; do
             # Split the line into the file path and the capabilities
-            file_path=$(echo "$line" | awk '{print $1}')
+            local file_path=$(echo "$line" | awk '{print $1}')
             # Extract capabilities, removing the equals sign if present
-            file_capabilities=$(echo "$line" | awk '{print substr($0, index($0, $2))}' | sed 's/^= //')
+            local file_capabilities=$(echo "$line" | awk '{print substr($0, index($0, $2))}' | sed 's/^= //')
 
             # Get the binary name
-            binary=$(basename "$file_path")
+            local binary=$(basename "$file_path")
 
             # Check if the binary name matches any of the binaries from GTFOBins
             if [[ "$binary" =~ ^($cap_binaries)([0-9.]+)?$ ]]; then
                 # Extract the matched binary name from the list
-                matched_binary="${BASH_REMATCH[1]}"
+                local matched_binary="${BASH_REMATCH[1]}"
                 
                 echo -e "\n${BWhite}Binary: ${BRed}$binary ${BWhite}- Can Be Abused! Check 'https://gtfobins.github.io/gtfobins/$matched_binary/'!${COLOUR_OFF}\n${BWhite}Full Path: ${BRed}$file_path\n${BWhite}Capabilities: ${BRed}$file_capabilities ${COLOUR_OFF}\n"
             else
